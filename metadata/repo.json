@@ -1,0 +1,11 @@
+{
+    "deployedToProduction": false,
+    "contacts": [ "", "" ],
+    "requestor":  "yibosun@microsoft.com",
+    "description": "We need a repo for internal experiment and prototyping, without impacting product repo.",
+    "complianceTypes": [],
+    "inventoryId": [ "" ],
+    "schema": {
+        "office": "1.0.0"
+    }
+}

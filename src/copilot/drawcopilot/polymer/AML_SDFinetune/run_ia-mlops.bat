@@ -1,0 +1,1 @@
+python pipelines/experiments/sd_finetune.py --config-dir pipelines/config --config-name experiments/sd_finetune_ia-mlops run.submit=True

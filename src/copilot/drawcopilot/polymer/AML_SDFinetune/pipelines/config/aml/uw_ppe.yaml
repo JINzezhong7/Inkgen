@@ -1,0 +1,6 @@
+# @package _group_
+subscription_id: a6d8cf0d-b71e-4ffe-9a03-3e6013fed98a
+resource_group: UNIFIED.HERON.PPE.fe76b414-5e90-4863-b118-100f60e91cc1
+workspace_name: amlWorkspace93f11feenam
+tenant: cdc5aeea-15c5-4db6-b079-fcadd2505dc2
+auth: "interactive"

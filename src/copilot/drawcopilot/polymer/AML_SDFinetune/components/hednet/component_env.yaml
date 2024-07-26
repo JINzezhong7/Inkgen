@@ -1,0 +1,13 @@
+name: hednet_env
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cu117
+    - azureml-core
+    - azureml-dataset-runtime
+    - shrike
+    - torch==1.13.1+cu117
+    - torchvision==0.14.1+cu117
+    - torchaudio==0.13.1
+

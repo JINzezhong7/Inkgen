@@ -1,0 +1,68 @@
+# > python pipelines/TrainExportPipeline.py --config-dir pipelines/config --config-name experiments/tlg_rnn run.submit=True
+
+defaults:
+  - aml: ia-mlops
+  - compute: ia-mlops
+  - modules: module_defaults
+
+run:
+  experiment_name: "sd_finetune"
+  regenerate_outputs: false
+  continue_on_failure: false
+  verbose: false
+  submit: false
+  resume: false
+  canary: false
+  silent: false
+  wait: false
+
+module_loader:
+  use_local: "sd_downloadbasemodel,sd_finetune,sd_package,hednet"
+  force_default_module_version: null
+  force_all_module_version: null
+  local_steps_folder: "../../../components"
+
+inputs:
+# parameters for fine tuning sd model
+  mixed_precision: "fp16"
+  num_processes: 1
+  num_machines: 1
+  num_cpu_threads_per_process: 2
+  multires_noise_discount: 0.3
+  multires_noise_iterations: 6
+  bucket_reso_steps: 64
+  caption_extension: ".txt"
+  clip_skip: 2
+  min_bucket_reso: 256
+  max_bucket_reso: 2048
+  huber_c: 0.1
+  huber_schedule: "snr"
+  learning_rate: 0.0001
+  loss_type: "l2"
+  lr_scheduler: "cosine"
+  lr_scheduler_num_cycles: 1
+  lr_warmup_steps: 152
+  max_data_loader_n_workers: 0
+  max_grad_norm: 1
+  resolution: "1024,1024"
+  max_train_steps: 1520
+  min_timestep: 0
+  network_alpha: 1
+  network_dim: 8
+  network_module: "networks.lora"
+  noise_offset: 0.1
+  optimizer_type: "AdamW8bit"
+  output_name: "asd_sketch"
+  save_every_n_epochs: 1
+  save_model_as: "safetensors"
+  save_precision: "fp16"
+  text_encoder_lr: 0.0001
+  unet_lr: 0.0001
+  train_data_dir: "sd_finetune"
+  train_data_dir_version: "1"
+  train_batch_size: 1
+# parameters for training hed net
+  heddatadir: "pidinet"
+  heddatadir_version: "1"
+outputs:
+  output_dir: {}

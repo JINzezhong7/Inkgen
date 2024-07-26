@@ -1,0 +1,109 @@
+# @package _group_
+default_compute: cpu-cluster
+default_datastore: workspaceblobstore
+computes:
+  # nam:
+  - name: lc-mope7e-0
+    os: linux
+    DC: false
+    gpu: false
+    location: eastus2
+    type: AmlCompute
+    environment: msit
+  - name: lci-mope7e-0
+    os: linux
+    DC: true
+    gpu: false
+    location: eastus2
+    type: AmlCompute
+    environment: msit
+  - name: adf-mope7ebe5
+    os: None
+    DC: false
+    gpu: false
+    location: eastus2
+    type: DataFactory
+    environment: msit
+
+  # europe:
+  - name: lc-mop09d-0
+    os: linux
+    DC: false
+    gpu: false
+    location: northeurope
+    type: AmlCompute
+    environment: msit
+  - name: lci-mop09d-0
+    os: linux
+    DC: true
+    gpu: false
+    location: northeurope
+    type: AmlCompute
+    environment: msit
+  - name: adf-mop09d986
+    os: None  #TODO: need to simplify this
+    DC: false #TODO: need to simplify this
+    gpu: false
+    location: northeurope
+    type: DataFactory
+    environment: msit
+
+  # cloverport:
+  - name: lc-eyedf0-0
+    os: linux
+    DC: false
+    gpu: false
+    location: eastus2
+    type: AmlCompute
+    environment: cloverport
+  - name: adf-mop1726e7
+    os: None  #TODO: need to simplify this
+    DC: false #TODO: need to simplify this
+    gpu: false
+    location: eastus2
+    type: DataFactory
+    environment: msit
+
+datastores:
+  # datastores
+  - name: heron_sandbox_storage_mope7ebe5
+    DC: false
+    location: eastus2
+    environment: msit
+  - name: heron_iso_sandbox_storage_mope7ebe5
+    DC: true
+    location: eastus2
+    environment: msit
+  - name: heron_sandbox_storage_eyedf052f
+    DC: false
+    location: eastus2
+    environment: cloverport
+
+# cosmos
+noncompliant_datastore: fl_north_eu2
+
+# data I/O for linux modules
+linux_input_mode: download
+linux_output_mode: upload
+
+# data I/O for windows modules
+windows_input_mode: download
+windows_output_mode: upload
+
+# other runsettings
+hdi_driver_memory: 2g
+hdi_driver_cores: 2
+hdi_executor_memory: 2g
+hdi_executor_cores: 2
+hdi_number_executors: 2
+hdi_conf: "{\n  \"spark.yarn.maxAppAttempts\": 2,\n  \"spark.sql.shuffle.partitions\"\
+  : 2000,\n  \"spark.yarn.appMasterEnv.PYSPARK_PYTHON\": \"/usr/bin/anaconda/envs/py37/bin/python3\"\
+  ,\n  \"spark.yarn.appMasterEnv.PYSPARK_DRIVER_PYTHON\": \"/usr/bin/anaconda/envs/py37/bin/python3\"\
+  \n}\n"
+synapse_driver_memory: 2g
+parallel_node_count: 10
+parallel_process_count_per_node: null
+parallel_run_invocation_timeout: 10800
+parallel_run_max_try: 3
+parallel_mini_batch_size: 1
+parallel_error_threshold: -1

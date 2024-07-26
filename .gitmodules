@@ -1,0 +1,3 @@
+[submodule "src/copilot/drawcopilot/polymer/AML_SDFinetune/src/sd-scripts"]
+	path = src/copilot/drawcopilot/polymer/AML_SDFinetune/src/sd-scripts
+	url = https://github.com/kohya-ss/sd-scripts

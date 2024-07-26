@@ -1,0 +1,185 @@
+$schema: http://azureml/sdk-2-0/CommandComponent.json
+name: sd_finetune
+version: 0.0.1
+display_name: sd_finetune
+type: CommandComponent
+description: finetune Stable Diffusion model
+is_deterministic: false
+# tags:
+#   Office:
+#   helpDocument: https://aka.ms/aml/compliant
+#   contact: aml-ds-1p-enablers@microsoft.com
+
+inputs:
+  pretrained_model_name_or_path:
+    type: AnyDirectory
+    optional: false
+  train_data_dir:
+    type: AnyDirectory
+    optional: false
+  mixed_precision:  #fp16
+    type: String
+    optional: false
+  num_processes:
+    type: Integer
+    optional: false
+  num_machines:
+    type: Integer
+    optional: false
+  num_cpu_threads_per_process:
+    type: Integer
+    optional: false
+  multires_noise_discount:
+    type: Float
+    optional: false
+  multires_noise_iterations:
+    type: Integer
+    optional: false
+  bucket_reso_steps:
+    type: Integer
+    optional: false
+  caption_extension:
+    type: String
+    optional: false
+  clip_skip:
+    type: Integer
+    optional: false
+  min_bucket_reso:
+    type: Integer
+    optional: false
+  max_bucket_reso:
+    type: Integer
+    optional: false
+  huber_c:
+    type: Float
+    optional: false
+  huber_schedule:
+    type: String
+    optional: false
+  learning_rate:
+    type: Float
+    optional: false
+  loss_type:
+    type: String
+    optional: false
+  lr_scheduler:
+    type: String
+    optional: false
+  lr_scheduler_num_cycles:
+    type: Integer
+    optional: false
+  lr_warmup_steps:
+      type: Integer
+      optional: false
+  max_data_loader_n_workers:
+      type: Integer
+      optional: false
+  max_grad_norm:
+      type: Integer
+      optional: false
+  resolution:
+      type: String
+      optional: false
+  max_train_steps:
+      type: Integer
+      optional: false
+  min_timestep:
+      type: Integer
+      optional: false
+  network_alpha:
+      type: Integer
+      optional: false
+  network_dim:
+      type: Integer
+      optional: false
+  network_module:
+      type: String
+      optional: false
+  noise_offset:
+      type: Float
+      optional: false
+  optimizer_type:
+      type: String
+      optional: false
+  output_name:
+      type: String
+      optional: false
+  save_every_n_epochs:
+      type: Integer
+      optional: false
+  save_model_as:
+      type: String
+      optional: false
+  save_precision:
+      type: String
+      optional: false
+  text_encoder_lr:
+      type: Float
+      optional: false
+  train_batch_size:
+      type: Integer
+      optional: false
+  unet_lr:
+      type: Float
+      optional: false
+
+outputs:
+  output_dir:
+    type: AnyDirectory
+    description: Output model
+
+command: >-
+  accelerate launch 
+  --mixed_precision={inputs.mixed_precision}
+  --num_processes={inputs.num_processes}
+  --num_machines={inputs.num_machines}
+  --num_cpu_threads_per_process={inputs.num_cpu_threads_per_process}
+  sd-scripts/sdxl_train_network.py 
+  --multires_noise_discount={inputs.multires_noise_discount}
+  --multires_noise_iterations={inputs.multires_noise_iterations}
+  --bucket_no_upscale 
+  --bucket_reso_steps={inputs.bucket_reso_steps}
+  --cache_latents
+  --caption_extension={inputs.caption_extension}
+  --clip_skip={inputs.clip_skip} 
+  --enable_bucket 
+  --min_bucket_reso={inputs.min_bucket_reso}
+  --max_bucket_reso={inputs.max_bucket_reso}
+  --huber_c={inputs.huber_c}
+  --huber_schedule={inputs.huber_schedule}
+  --learning_rate={inputs.learning_rate}
+  --loss_type={inputs.loss_type}
+  --lr_scheduler={inputs.lr_scheduler}
+  --lr_scheduler_num_cycles={inputs.lr_scheduler_num_cycles}
+  --lr_warmup_steps={inputs.lr_warmup_steps}
+  --max_data_loader_n_workers={inputs.max_data_loader_n_workers}
+  --max_grad_norm={inputs.max_grad_norm}
+  --resolution={inputs.resolution}
+  --max_train_steps={inputs.max_train_steps}
+  --min_timestep={inputs.min_timestep}
+  --network_alpha={inputs.network_alpha}
+  --network_dim={inputs.network_dim}
+  --network_module={inputs.network_module}
+  --no_half_vae 
+  --noise_offset={inputs.noise_offset}
+  --optimizer_type={inputs.optimizer_type}
+  --output_dir={outputs.output_dir}
+  --output_name={inputs.output_name}
+  --pretrained_model_name_or_path={inputs.pretrained_model_name_or_path}
+  --save_every_n_epochs={inputs.save_every_n_epochs}
+  --save_model_as={inputs.save_model_as}
+  --save_precision={inputs.save_precision}
+  --text_encoder_lr={inputs.text_encoder_lr}
+  --train_batch_size={inputs.train_batch_size}
+  --train_data_dir={inputs.train_data_dir}
+  --unet_lr={inputs.unet_lr}
+  --xformers
+  --mixed_precision={inputs.mixed_precision}
+  --gradient_checkpointing 
+
+environment:
+  docker:
+    image: mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.8-cudnn8-ubuntu22.04
+  conda:
+    conda_dependencies_file: component_env.yaml
+  os: Linux

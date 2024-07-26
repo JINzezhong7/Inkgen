@@ -1,0 +1,20 @@
+# @package _group_
+# Contains all the demo components with default version
+manifest:
+  # COMPONENT THAT OPERATES ON A PARAMETER VALUE
+  - key: "sd_finetune"
+    name: "sd_finetune"
+    version: null
+    yaml: "sd_finetune/component_spec.yaml"
+  - key: "sd_downloadbasemodel"
+    name: "sd_downloadbasemodel"
+    version: null
+    yaml: "sd_downloadbasemodel/component_spec.yaml"
+  - key: "sd_package"
+    name: "sd_package"
+    version: null
+    yaml: "sd_package/component_spec.yaml"
+  - key: "hednet"
+    name: "hednet"
+    version: null
+    yaml: "hednet/component_spec.yaml"

@@ -207,3 +207,5 @@ class LSTMSynthesis(nn.Module):
                                                 
         torch.nn.utils.clip_grad_value_(self.parameters(), clip_value)
         torch.nn.utils.clip_grad_value_(chain(self.lstm1.parameters(), self.lstm2.parameters(), self.lstm3.parameters()), lstm_clip_value)
+        norm = torch.nn.utils.clip_grad_norm_(self.parameters(), 9)
+        print(norm)

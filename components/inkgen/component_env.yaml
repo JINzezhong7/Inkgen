@@ -1,0 +1,28 @@
+name: inkgen_env
+dependencies:
+  - python=3.9
+  - pip
+  - pip:
+      - --extra-index-url https://download.pytorch.org/whl/cu118
+      - numpy==1.26.4
+      - onnx==1.16.1
+      - h5py==3.3.0
+      - tensorboard
+      - pillow
+      - matplotlib
+      - azureml-core
+      - azureml-dataset-runtime
+      - shrike
+      - onnxconverter-common
+      - onnxmltools
+      - onnxruntime
+      - PyYAML
+      - tqdm
+      - azureml-sdk
+      - torch
+      - torchvision
+      - torchaudio
+      - shlex
+
+
+

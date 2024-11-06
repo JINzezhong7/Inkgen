@@ -1,0 +1,91 @@
+$schema: http://azureml/sdk-2-0/CommandComponent.json
+name: inkgen
+version: 0.0.1
+display_name: inkgen
+type: CommandComponent
+description: training inkgen model
+is_deterministic: false
+# tags:
+#   Office:
+#   helpDocument: https://aka.ms/aml/compliant
+#   contact: aml-ds-1p-enablers@microsoft.com
+inputs:
+  data_dir:
+    type: AnyDirectory
+    optional: false
+  use_scheduler:
+    type: Boolean
+    optional: false
+  batch_size:
+    type: Integer
+    optional: false
+  num_epochs:
+    type: Integer
+    optional: false
+  cell_size:
+    type: Integer
+    optional: false
+  optimizer:
+    type: String
+    optional: false
+  learning_rate:
+    type: Float
+    optional: false
+  warmup_steps:
+    type: Integer
+    optional: false
+  decay_rate:
+    type: Float
+    optional: false
+  num_clusters:
+    type: Integer
+    optional: false
+  K:
+    type: Integer
+    optional: false
+  z_size:
+    type: Integer
+    optional: false
+  clip_value:
+    type: Float
+    optional: false
+  lstm_clip_value:
+    type: Integer
+    optional: false
+  resume_from_ckpt:
+    type: String
+    optional: false
+  style_equalization:
+    type: Boolean
+    optional: false
+outputs:
+  model_output_dir:
+    type: AnyDirectory
+    description: Output model
+
+command: >-
+  python run.py 
+  --data_dir={inputs.data_dir} 
+  --model_dir={outputs.model_output_dir} 
+  --use_scheduler={inputs.use_scheduler}
+  --batch_size={inputs.batch_size}  
+  --num_epochs={inputs.num_epochs} 
+  --cell_size={inputs.cell_size} 
+  --learning_rate={inputs.learning_rate} 
+  --warmup_steps={inputs.warmup_steps} 
+  --decay_rate={inputs.decay_rate} 
+  --num_clusters={inputs.num_clusters} 
+  --K={inputs.K} 
+  --z_size={inputs.z_size} 
+  --clip_value={inputs.clip_value} 
+  --lstm_clip_value={inputs.lstm_clip_value} 
+  --resume_from_ckpt={inputs.resume_from_ckpt} 
+  --style_equalization={inputs.style_equalization}
+
+environment:
+  docker:
+    image: mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.8-cudnn8-ubuntu22.04
+  conda:
+    conda_dependencies_file: component_env.yaml
+  os: Linux
+

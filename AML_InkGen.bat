@@ -1,0 +1,1 @@
+python pipelines/experiments/inkgen.py  --config-dir pipelines/config --config-name experiments/inkgen-ia-mlops.yaml run.submit=True

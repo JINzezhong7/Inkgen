@@ -1,0 +1,6 @@
+# @package _group_
+subscription_id: "8f60fba2-9902-461e-ab9e-45faf8c61df2"
+resource_group: "IA-MLOps"
+workspace_name: "ia-mlops"
+tenant: 72f988bf-86f1-41af-91ab-2d7cd011db47
+auth: "interactive"

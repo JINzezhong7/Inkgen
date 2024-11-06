@@ -109,6 +109,7 @@ def train(args, train_loader, validation_loader):
         model.train()
         train_loss = 0
         for i, (data, masks, onehots) in enumerate(train_loader):
+            data , masks, onehots = data.to(device), masks.to(device), onehots.to(device)
             # prep inputs
             batch_size = data.shape[0]
             state1, state2, state3 = get_init_state(batch_size, args.cell_size, squeeze=True), get_init_state(batch_size, args.cell_size), get_init_state(batch_size, args.cell_size)
@@ -145,6 +146,7 @@ def train(args, train_loader, validation_loader):
         validation_loss = 0
         for i, (data, masks, onehots) in enumerate(validation_loader):  
             # prep inputs
+            data , masks, onehots = data.to(device), masks.to(device), onehots.to(device)
             batch_size = data.shape[0]
             state1, state2, state3 = get_init_state(batch_size, args.cell_size, squeeze=True), get_init_state(batch_size, args.cell_size), get_init_state(batch_size, args.cell_size)
             kappa = torch.zeros(batch_size, args.K).to(device)
@@ -178,6 +180,8 @@ def train(args, train_loader, validation_loader):
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--data_dir', type=str, default='datasets',
+                        help='directory to load training data')
     parser.add_argument('--model_dir', type=str, default='save',
                         help='directory to save model to')
     parser.add_argument('--cell_size', type=int, default=512,
@@ -211,24 +215,19 @@ def main():
     parser.add_argument('--style_equalization', action='store_true',
                         help='whether or not to train with style equalization')
     args = parser.parse_args()
-    
-    load = lambda filepath: torch.from_numpy(np.load(filepath)).type(torch.FloatTensor).to(device)
+    load = lambda filepath: torch.from_numpy(np.load(filepath)).type(torch.FloatTensor)
     def impose_min_length(data):
         min_idxs = torch.where(data[1].sum(-1) >= 76)[0]
         return [data[0][min_idxs], data[1][min_idxs], data[2][min_idxs]]
     
     # prepare training data
-    #train_data = [load('datasets/data_inkwell_preprocessed/train_strokes_700.npy'), load('datasets/data_inkwell_preprocessed/train_masks_700.npy'), load('datasets/data_inkwell_preprocessed/train_onehot_700.npy')]
-    train_data = [load('datasets/data_inkwell_preprocessed_random/train_strokes_700.npy'), load('datasets/data_inkwell_preprocessed_random/train_masks_700.npy'), load('datasets/data_inkwell_preprocessed_random/train_onehot_700.npy')]
-    #train_data = [load('datasets/data_inkwell/train_strokes_700.npy'), load('datasets/data_inkwell/train_masks_700.npy'), load('datasets/data_inkwell/train_onehot_700.npy')]
+    train_data = [load(f'{args.data_dir}/train_strokes_700.npy'), load(f'{args.data_dir}/train_masks_700.npy'), load(f'{args.data_dir}/train_onehot_700.npy')]
     train_data = impose_min_length(train_data)
     train_data = [(train_data[0][i], train_data[1][i], train_data[2][i]) for i in range(len(train_data[0]))] 
     train_loader = torch.utils.data.DataLoader(train_data, batch_size=args.batch_size, shuffle=True)#, drop_last=True)
         
     # prepare validation data
-    #validation_data = [load('datasets/data_inkwell_preprocessed/validation_strokes_700.npy'), load('datasets/data_inkwell_preprocessed/validation_masks_700.npy'), load('datasets/data_inkwell_preprocessed/validation_onehot_700.npy')]
-    validation_data = [load('datasets/data_inkwell_preprocessed_random/validation_strokes_700.npy'), load('datasets/data_inkwell_preprocessed_random/validation_masks_700.npy'), load('datasets/data_inkwell_preprocessed_random/validation_onehot_700.npy')]
-    #validation_data = [load('datasets/data_inkwell/validation_strokes_700.npy'), load('datasets/data_inkwell/validation_masks_700.npy'), load('datasets/data_inkwell/validation_onehot_700.npy')]
+    validation_data = [load(f'{args.data_dir}/validation_strokes_700.npy'), load(f'{args.data_dir}/validation_masks_700.npy'), load(f'{args.data_dir}/validation_onehot_700.npy')]
     validation_data = impose_min_length(validation_data)
     validation_data = [(validation_data[0][i], validation_data[1][i], validation_data[2][i]) for i in range(len(validation_data[0]))] 
     validation_loader = torch.utils.data.DataLoader(validation_data, batch_size=args.batch_size)#, shuffle=False, drop_last=True)

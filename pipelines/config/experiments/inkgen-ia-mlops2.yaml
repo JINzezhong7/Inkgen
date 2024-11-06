@@ -1,0 +1,45 @@
+# > python pipelines/TrainExportPipeline.py --config-dir pipelines/config --config-name experiments/tlg_rnn run.submit=True
+
+defaults:
+  - aml: ia-mlops
+  - compute: ia-mlops2
+  - modules: module_defaults
+
+run:
+  experiment_name: "inkgen"
+  regenerate_outputs: false
+  continue_on_failure: false
+  verbose: false
+  submit: false
+  resume: false
+  canary: false
+  silent: false
+  wait: false
+
+module_loader:
+  use_local: "InkGen"
+  force_default_module_version: null
+  force_all_module_version: null
+  local_steps_folder: "../../../components"
+
+inputs:
+  data_dir: "Eng-600k"
+  data_dir_version: "2"
+  batch_size: 64
+  num_epochs: 80
+  cell_size: 512
+  learning_rate: 0.0001
+  optimizer: 'rms'
+  warmup_steps: 4000
+  decay_rate: 0.99
+  num_clusters: 20
+  K: 10
+  clip_value: 100
+  lstm_clip_value: 10
+  use_scheduler: True
+  z_size: 256
+  resume_from_ckpt: "None"
+  style_equalization: False
+
+outputs:
+  output_dir: {}

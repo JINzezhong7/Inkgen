@@ -1,0 +1,6 @@
+# @package _group_
+manifest:
+  - key: "InkGen"
+    name: "inkgen"
+    version: null
+    yaml: "inkgen/component_spec.yaml"

@@ -196,16 +196,14 @@ class LSTMSynthesis(nn.Module):
     
     def clip_grad(self, clip_value, lstm_clip_value):
         for n, p in self.named_parameters():
-            if torch.isnan(p.grad).any():
-                print(n, 'GRAD is nan:', torch.isnan(p.grad).sum().item() / math.prod(p.grad.shape) * 100)
-                torch.nan_to_num_(p.grad, clip_value)
-            if torch.isinf(p.grad).any():
-                print(n, 'GRAD is inf:', torch.isinf(p.grad).sum().item() / math.prod(p.grad.shape) * 100)
-                torch.nan_to_num_(p.grad, clip_value)
-            if torch.isnan(p).any():
-                print(n, 'PARAM is nan:', torch.isnan(p).sum().item() / math.prod(p.shape) * 100)
+            if torch.isinf(p.grad).any() or torch.isnan(p.grad).any():
+                print(n, 'GRAD is inf or Nan')
+                torch.nan_to_num_(p.grad)
+            if torch.isnan(p).any() or torch.isinf(p).any():
+                print(n, 'PARAM is nan or inf')
+                torch.nan_to_num_(p)
                                                 
+        norm = torch.nn.utils.clip_grad_norm_(self.parameters(), clip_value)                                        
         torch.nn.utils.clip_grad_value_(self.parameters(), clip_value)
         torch.nn.utils.clip_grad_value_(chain(self.lstm1.parameters(), self.lstm2.parameters(), self.lstm3.parameters()), lstm_clip_value)
-        norm = torch.nn.utils.clip_grad_norm_(self.parameters(), 9)
-        print(norm)
+        return norm

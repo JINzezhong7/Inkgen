@@ -17,6 +17,7 @@ from utilz import get_init_state, save_checkpoint
 device = torch.device('cpu') if not torch.cuda.is_available() else torch.device('cuda:0')
 
 eps = 1E-20 # to prevent numerical error
+inf_clip = 1E+20
 pi_term = -torch.Tensor([2*np.pi]).to(device).log()
 
 # training objective
@@ -27,24 +28,28 @@ def log_likelihood(end, stop, weights, mu_1, mu_2, log_sigma_1, log_sigma_2, rho
     y_0, y_1, y_2 = torch.chunk(y, 3, dim=-1)
         
     # end of stroke prediction
-    end_loglik = (y_0*end + (1-y_0)*(1-end)).log().squeeze()
-    
+    end_v = torch.clip(y_0*end + (1-y_0)*(1-end), min=eps, max=1.0)
+    end_loglik = end_v.log().squeeze()
+
     # stop prediction
     stop_labels = torch.zeros_like(y_0).to(device)
     stop_labels[torch.arange(y_0.shape[0]), masks.sum(-1).int()-1, 0] = 1
-    
-    stop_loglik = (stop_labels*stop + (1-stop_labels)*(1-stop)).log().squeeze()
-        
+    stop_v = torch.clip(stop_labels*stop + (1-stop_labels)*(1-stop), min=eps, max=1.0)
+    stop_loglik = stop_v.log().squeeze()
     # new stroke point prediction    
     z = (y_1 - mu_1)**2/(log_sigma_1.exp()**2)\
         + ((y_2 - mu_2)**2/(log_sigma_2.exp()**2)) \
         - 2*rho*(y_1-mu_1)*(y_2-mu_2)/((log_sigma_1 + log_sigma_2).exp())
-    mog_lik1 =  pi_term -log_sigma_1 - log_sigma_2 - 0.5*((1-rho**2).log())
-    mog_lik2 = z/(2*(1-rho**2))
-    mog_loglik = ((weights.log() + (mog_lik1 - mog_lik2)).exp().sum(dim=-1)+eps).log()
+    safe_v = torch.clip(1 - rho**2 + eps, min=eps)
+    mog_lik1 =  pi_term -log_sigma_1 - log_sigma_2 - 0.5*(safe_v.log())
+    mog_lik2 = z/(2*safe_v)
+    mog_v = (weights.log() + (mog_lik1 - mog_lik2)).exp().sum(dim=-1)
+    mog_v[torch.isnan(mog_v)] = 0.0
+    mog_v = torch.clip(mog_v, min=eps, max=inf_clip)
+    mog_loglik = mog_v.log()
     
     loglik = (end_loglik*masks).sum() / batch_size + (stop_loglik*masks).sum() / batch_size + (mog_loglik*masks).sum() / batch_size
-    
+
     if mu_z is not None:
         kl_div = 0.5 * ((1 + log_var_z - log_var_prior - (mu_z - mu_prior).pow(2) / log_var_prior.exp() - log_var_z.exp() / log_var_prior.exp()) * masks.unsqueeze(2).repeat(1, 1, mu_z.shape[2])).sum()
         loglik += kl_div / batch_size
@@ -128,14 +133,21 @@ def train(args, train_loader, validation_loader):
                 outputs = model(x, onehots, w, kappa, state1, state2, state3)
                 end, stop, weights, mu_1, mu_2, log_sigma_1, log_sigma_2, rho, _, _, _, _, _, _ = outputs
                 loss = -log_likelihood(end, stop, weights, mu_1, mu_2, log_sigma_1, log_sigma_2, rho, y, masks)#/batch_size#/torch.sum(masks)
+            if torch.isnan(loss).any() or torch.isinf(loss).any():
+                print(f"bad loss encountered at epoch {epoch + 1}, batch {i + 1}")
+                continue
             
-            train_loss += loss.item() if (not torch.isnan(loss).any() and not torch.isinf(loss).any()) else 0
+            train_loss += loss.item()
             print(f'\rEpoch {epoch + 1:4} {i + 1}/{len(train_loader)} batches. Loss {(train_loss / (i + 1)):7.2f}.  Curr Loss {(loss.item()):7.2f}.', end='')
 
             # compute grads
             optimizer.zero_grad()
             loss.backward()
-            model.clip_grad(args.clip_value, args.lstm_clip_value)
+            norm = model.clip_grad(args.clip_value, args.lstm_clip_value)
+            print(norm)
+            if  norm > args.clip_value*100:
+                print("Force abnormal gradients to smaller values.")
+                torch.nn.utils.clip_grad_norm_(model.parameters(), min([1.0, args.lstm_clip_value/10]))
             
             # gradient step
             optimizer.step()
@@ -216,6 +228,8 @@ def main():
                         help='whether or not to train with style equalization')
     args = parser.parse_args()
     load = lambda filepath: torch.from_numpy(np.load(filepath)).type(torch.FloatTensor)
+    # output_size = (input_size - kernel_size + 2 * padding) / stride + 1
+    # 76 related to SE Structure
     def impose_min_length(data):
         min_idxs = torch.where(data[1].sum(-1) >= 76)[0]
         return [data[0][min_idxs], data[1][min_idxs], data[2][min_idxs]]

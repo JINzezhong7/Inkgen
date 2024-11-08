@@ -22,7 +22,3 @@ dependencies:
       - torch
       - torchvision
       - torchaudio
-      - shlex
-
-
-

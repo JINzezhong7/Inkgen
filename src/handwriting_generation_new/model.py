@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import logging
 from itertools import chain
 
 # import pytorch modules
@@ -7,7 +8,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-device = torch.device('cpu') if not torch.cuda.is_available() else torch.device('cuda:0')
+logger = logging.getLogger(__name__)
+# device = torch.device('cpu') if not torch.cuda.is_available() else torch.device('cuda')
 
 # attention window for handwriting synthesis
 class Window(nn.Module):
@@ -23,7 +25,7 @@ class Window(nn.Module):
         alpha, beta, pre_kappa = params.chunk(3, dim=-1)
         kappa = kappa_old + pre_kappa
         
-        indices = torch.from_numpy(np.array(range(max_text_len))).type(torch.FloatTensor).to(device)
+        indices = torch.from_numpy(np.array(range(max_text_len))).type(torch.FloatTensor).to(x.device)
         gravity = -beta.unsqueeze(2)*(kappa.unsqueeze(2).repeat(1, 1, max_text_len)-indices)**2
         phi = (alpha.unsqueeze(2) * gravity.exp()).sum(dim=1)#*(max_text_len/text_lens)
         
@@ -59,7 +61,7 @@ class Blur1d(nn.Module):
         kernel /= kernel.sum()
         kernel = kernel.unsqueeze(0).unsqueeze(0).repeat(channels, 1, 1)
 
-        self.kernel = torch.Tensor(kernel).to(device)
+        self.kernel = nn.Parameter(kernel)
         self.channels = channels
         self.stride = stride
         
@@ -169,7 +171,7 @@ class LSTMSynthesis(nn.Module):
             mu_z, log_var_z, A, z = self.style_encoder(h1s, ws, feats_r, feats_a=feats_a, masks_r=masks_r, masks_a=masks)
             mu_prior, log_var_prior = self.style_encoder.prior(h1s, ws)
             if torch.isnan(z).any():
-                print('z is nan')
+                logger.warning('z is nan')
             
         h2s, state2 = self.lstm2(torch.cat([x,ws,h1s] + ([z] if x_r is not None else []), -1), state2)
         h3s, state3 = self.lstm3(torch.cat([x,ws,h2s] + ([z] if x_r is not None else []), -1), state3)        
@@ -184,9 +186,9 @@ class LSTMSynthesis(nn.Module):
         
         for n, a in zip(['ws', 'h1s', 'state10', 'state11', 'w', 'kappa', 'phi', 'h2s', 'state20', 'state21', 'h3s', 'state30', 'state31', 'params'], [ws, h1s, state1[0], state1[1], w, kappa, phi, h2s, state2[0], state2[1], h3s, state3[0], state3[1], params]):
             if torch.isnan(a).any():
-                print(n, 'is nan')
+                logger.warning(f'{n} is nan')
             if torch.isinf(a).any():
-                print(n, 'is inf')
+                logger.warning(f'{n} is inf')
                 
         ret = (end, stop, weights, mu_1, mu_2, log_sigma_1, log_sigma_2, rho, w, kappa, state1, state2, state3, phi)
         if masks is not None:
@@ -194,16 +196,14 @@ class LSTMSynthesis(nn.Module):
         
         return ret
     
-    def clip_grad(self, clip_value, lstm_clip_value):
+    def clip_grad_ensure_model_health(self, clip_value, lstm_clip_value):
         for n, p in self.named_parameters():
             if torch.isinf(p.grad).any() or torch.isnan(p.grad).any():
-                print(n, 'GRAD is inf or Nan')
-                torch.nan_to_num_(p.grad)
+                logger.warning(f'{n} GRAD is inf or Nan')
+                p.grad = torch.nan_to_num_(p.grad)
             if torch.isnan(p).any() or torch.isinf(p).any():
-                print(n, 'PARAM is nan or inf')
-                torch.nan_to_num_(p)
-                                                
-        norm = torch.nn.utils.clip_grad_norm_(self.parameters(), clip_value)                                        
+                logger.warning(f'{n} PARAM is nan or inf')
+                p = torch.nan_to_num_(p)
+
         torch.nn.utils.clip_grad_value_(self.parameters(), clip_value)
         torch.nn.utils.clip_grad_value_(chain(self.lstm1.parameters(), self.lstm2.parameters(), self.lstm3.parameters()), lstm_clip_value)
-        return norm

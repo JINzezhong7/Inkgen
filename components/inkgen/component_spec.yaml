@@ -64,13 +64,14 @@ outputs:
     description: Output model
 
 command: >-
-  python run.py 
+  torchrun  --standalone --nnodes=1 --nproc-per-node=8 run.py 
   --data_dir={inputs.data_dir} 
   --model_dir={outputs.model_output_dir} 
   --use_scheduler={inputs.use_scheduler}
   --batch_size={inputs.batch_size}  
   --num_epochs={inputs.num_epochs} 
   --cell_size={inputs.cell_size} 
+  --optimizer={inputs.optimizer}
   --learning_rate={inputs.learning_rate} 
   --warmup_steps={inputs.warmup_steps} 
   --decay_rate={inputs.decay_rate} 

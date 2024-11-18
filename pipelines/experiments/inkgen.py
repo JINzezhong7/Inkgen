@@ -62,7 +62,7 @@ class InkGen(AMLPipelineHelper):
 
             InkGen_component_step = InkGen_component(
                 data_dir = data_path,
-                resume_from_ckpt = os.path.join(data_path, config.inputs.resume_from_ckpt) if config.inputs.resume_from_ckpt.lower() != "none" else "none",
+                resume_from_ckpt = config.inputs.resume_from_ckpt if config.inputs.resume_from_ckpt.lower() != "none" else "none",
                 batch_size = config.inputs.batch_size,
                 num_epochs = config.inputs.num_epochs,
                 use_scheduler = config.inputs.use_scheduler,

@@ -1,1 +1,1 @@
-python pipelines/experiments/inkgen.py  --config-dir pipelines/config --config-name experiments/inkgen-ia-mlops-heigh.yaml run.submit=True
+python pipelines/experiments/inkgen.py  --config-dir pipelines/config --config-name experiments/inkgen-ia-mlops-8v.yaml run.submit=True

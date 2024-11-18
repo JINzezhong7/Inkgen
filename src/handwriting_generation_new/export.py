@@ -23,12 +23,15 @@ def main():
     parser.add_argument('--output_name', type=str, default='hwg',
                         help='ONNX output filename')
     args = parser.parse_args()
+
+    device = torch.device('cpu')
+
     
-    char_to_code = torch.load(args.char_to_code_file)
+    char_to_code = torch.load(args.char_to_code_file, weights_only=True)
     model = LSTMSynthesis(len(char_to_code), args.cell_size, args.num_clusters, args.K, z_size=args.z_size if args.style_equalization else 0)
     model.load_state_dict(torch.load(args.state_dict_file)['model'])
 
-    x, onehot, w, kappa, state1, state2, state3 = torch.randn((1, 1, 3)), torch.randn((30, len(char_to_code))), torch.randn((1, len(char_to_code))), torch.randn((1, args.K)), get_init_state(1, args.cell_size, squeeze=True), get_init_state(1, args.cell_size), get_init_state(1, args.cell_size)
+    x, onehot, w, kappa, state1, state2, state3 = torch.randn((1, 1, 3)), torch.randn((30, len(char_to_code))), torch.randn((1, len(char_to_code))), torch.randn((1, args.K)), get_init_state(1, args.cell_size, device=device, squeeze=True), get_init_state(1, args.cell_size,device=device), get_init_state(1, args.cell_size, device=device)
     inps = (x, onehot, w, kappa, state1, state2, state3)
     
     input_names = ('x', 'onehot', 'w', 'kappa', 'state1.1_in', 'state1.2_in', 'state2.1_in', 'state2.2_in', 'state3.1_in', 'state3.2_in')

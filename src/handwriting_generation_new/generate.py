@@ -7,11 +7,11 @@ import matplotlib.pyplot as plt
 plt.rcParams["figure.figsize"] = (12,6)
 
 # find gpu 
-device = torch.device('cpu') if not torch.cuda.is_available() else torch.device('cuda:0')
+# device = torch.device('cpu') if not torch.cuda.is_available() else torch.device('cuda')
 
-def generate_conditionally(text, cell_size=400, num_clusters=20, K=10, z_size=0, random_state=700, bias=0., bias2=0., char_to_code_file='data/char_to_code.pt', state_dict_file='trained_models/conditional_epoch_60.pt', priming_x = None, priming_text = '', x_r=None):
+def generate_conditionally(text, save_name, device, cell_size=400, num_clusters=20, K=10, z_size=0, random_state=700, bias=0., bias2=0., char_to_code_file='data/char_to_code.pt', state_dict_file='trained_models/conditional_epoch_60.pt', priming_x = None, priming_text = '', x_r=None):
     
-    char_to_code = torch.load(char_to_code_file)
+    char_to_code = torch.load(char_to_code_file, weights_only=True)
     np.random.seed(random_state)
     
     #text = text + ' '
@@ -19,7 +19,7 @@ def generate_conditionally(text, cell_size=400, num_clusters=20, K=10, z_size=0,
         text = priming_text + ' ' + text
     
     model = LSTMSynthesis(len(char_to_code), cell_size, num_clusters, K, z_size=z_size)
-    model.load_state_dict(torch.load(state_dict_file)['model'])
+    model.load_state_dict(torch.load(state_dict_file, weights_only=True)['model'])
     model = model.to(device)
         
     onehot = torch.zeros((len(text), len(char_to_code))).to(device)
@@ -27,7 +27,7 @@ def generate_conditionally(text, cell_size=400, num_clusters=20, K=10, z_size=0,
         onehot[i][char_to_code[c]] = 1
     
     x = torch.zeros((1,1,3)).to(device)
-    state1, state2, state3 = get_init_state(1, cell_size, squeeze=True), get_init_state(1, cell_size), get_init_state(1, cell_size)
+    state1, state2, state3 = get_init_state(1, cell_size, device=device, squeeze=True), get_init_state(1, cell_size, device=device), get_init_state(1, cell_size, device=device)
     kappa = torch.zeros(1, K).to(device)
     w = onehot[:1]
     
@@ -76,7 +76,7 @@ def generate_conditionally(text, cell_size=400, num_clusters=20, K=10, z_size=0,
         points_a[:, :3], points_b[:, :3] = priming_x, points
         points = np.vstack([points_a, points_b])
     
-    plot_stroke(points)
+    plot_stroke(points, save_name=save_name)
     #attention_plot(np.stack(phis).T)
 
 

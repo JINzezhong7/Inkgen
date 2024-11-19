@@ -229,7 +229,7 @@ def train(args, train_loader, validation_loader, local_rank=0, enable_dist=False
                                     char_to_code_file=os.path.join(args.data_dir, 'char_to_code.pt'),
                                     state_dict_file=model_path,
                                     bias=1.0, bias2=1.0,
-                                    x_r=torch.unsqueeze(datum_b[:-1], 0).to(device)
+                                    x_r=torch.unsqueeze(datum_b[:-1], 0).to(device) if args.style_equalization else None
                 )
             print('wall time: {}s'.format(time.time()-start_time))
             logger.info('wall time: {}s'.format(time.time()-start_time))
@@ -237,9 +237,9 @@ def train(args, train_loader, validation_loader, local_rank=0, enable_dist=False
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', type=str, default='datasets',
+    parser.add_argument('--data_dir', type=str, default='../datasets',
                         help='directory to load training data')
-    parser.add_argument('--model_dir', type=str, default='save',
+    parser.add_argument('--model_dir', type=str, default='../save',
                         help='directory to save model to')
     parser.add_argument('--cell_size', type=int, default=512,
                         help='size of LSTM hidden state')

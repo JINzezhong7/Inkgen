@@ -78,6 +78,7 @@ def generate_conditionally(text, save_name, device, cell_size=400, num_clusters=
     
     plot_stroke(points, save_name=save_name)
     #attention_plot(np.stack(phis).T)
+    return points
 
 
 def attention_plot(phis):

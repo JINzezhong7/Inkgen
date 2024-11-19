@@ -200,10 +200,10 @@ class LSTMSynthesis(nn.Module):
         for n, p in self.named_parameters():
             if torch.isinf(p.grad).any() or torch.isnan(p.grad).any():
                 logger.warning(f'{n} GRAD is inf or Nan')
-                p.grad = torch.nan_to_num_(p.grad)
+                torch.nan_to_num_(p.grad)
             if torch.isnan(p).any() or torch.isinf(p).any():
                 logger.warning(f'{n} PARAM is nan or inf')
-                p = torch.nan_to_num_(p)
+                torch.nan_to_num_(p)
 
         torch.nn.utils.clip_grad_value_(self.parameters(), clip_value)
         torch.nn.utils.clip_grad_value_(chain(self.lstm1.parameters(), self.lstm2.parameters(), self.lstm3.parameters()), lstm_clip_value)

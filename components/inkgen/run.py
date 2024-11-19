@@ -40,7 +40,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     cmd = [
-    "python", "handwriting_generation_new/train.py",
+    "python", "src/train.py",
     "--data_dir", args.data_dir,
     "--model_dir", args.model_dir,
     "--cell_size", str(args.cell_size),

@@ -36,6 +36,21 @@ def save_checkpoint(epoch, model, validation_loss, optimizer, scheduler, directo
         torch.save(checkpoint, model_path)
     return model_path
 
+def offset_points2strokes(poits):
+    x = numpy.cumsum(poits[:, 1])
+    y = numpy.cumsum(poits[:, 2])
+    cuts = numpy.where(poits[:, 0] == 1)[0]
+    if len(poits) not in cuts:
+        cuts = np.append(cuts, len(poits))
+    start = 0
+    strokes = []
+    for cut_value in cuts:
+        stroke = []
+        for i in range(start, cut_value):
+            stroke.append([x[i],y[i]])
+        strokes.append(stroke)
+    return strokes
+
 def plot_stroke(stroke, save_name=None):
     # Plot a single example.
     f, ax = pyplot.subplots()

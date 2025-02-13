@@ -1,0 +1,32 @@
+# Pipeline configuration. Choose components to be engaged. The order below is the priority order that needs to be followed.
+components:
+  - libfuse
+  - file_cache
+  - attr_cache
+  - azstorage
+
+libfuse:
+  attribute-expiration-sec: 120
+  entry-expiration-sec: 120
+  negative-entry-expiration-sec: 240
+
+# Disk cache related configuration
+file_cache:
+  # Required
+  path: /c/Users/v-zezhongjin/Desktop/MSRA_intern/inkai.prototype-test/blobs/msramcgblob_valle_tmp
+  allow-non-empty-temp: true
+  timeout-sec: 120
+  max-size-mb: 4096
+
+attr_cache:
+  timeout-sec: 7200
+
+# Azure storage configuration
+azstorage:
+# Required
+  type: block # block|adls <type of storage account to be connected. Default - block>
+  account-name: msramcgblob
+  container: valle
+  endpoint: https://msramcgblob.blob.core.windows.net
+  mode: azcli  # key|sas|spn|msi|azcli <kind of authentication to be used>
+  #sas: ccq9MKA7hyqEBHREApv8VEKgY1PBmu806NoMrI/l8kKzPpLbiYDY4UMvUsFT/bHFQtZB0Ev1TKt4+AStoSQokg==

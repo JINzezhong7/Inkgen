@@ -6,7 +6,7 @@ defaults:
   - modules: module_defaults
 
 run:
-  experiment_name: "inkgen"
+  experiment_name: "transformer_small_set_from200"
   regenerate_outputs: false
   continue_on_failure: false
   verbose: false
@@ -23,12 +23,12 @@ module_loader:
   local_steps_folder: "../../../components"
 
 inputs:
-  data_dir: "Eng-600k"
-  data_dir_version: "3"
-  batch_size: 128
-  num_epochs: 120
+  data_dir: "py-tf-dataset-eng"
+  data_dir_version: "2"
+  batch_size: 64
+  num_epochs: 1000
   cell_size: 512
-  learning_rate: 0.001
+  learning_rate: 0.0001
   optimizer: 'adam'
   warmup_steps: 4000
   decay_rate: 0.99
@@ -36,10 +36,9 @@ inputs:
   K: 10
   clip_value: 100
   lstm_clip_value: 10
-  use_scheduler: True
+  use_scheduler: False
   z_size: 256
-  resume_from_ckpt: "none"
-  style_equalization: True
-
+  resume_from_ckpt: "src/epoch_200.pt"
+  style_equalization: False
 outputs:
   output_dir: {}

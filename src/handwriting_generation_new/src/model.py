@@ -165,7 +165,6 @@ class LSTMSynthesis(nn.Module):
         
     def forward(self, x, onehots, w, kappa, state1, state2, state3, x_r=None, masks=None, masks_r=None, bias=0.):
         ws, h1s, state1, w, kappa, phi = self.lstm1(x, onehots, w, kappa, state1)
-        
         if x_r is not None:
             feats_r, feats_a = self.style_encoder.featurize(x_r), None if masks is None else self.style_encoder.featurize(x)
             mu_z, log_var_z, A, z = self.style_encoder(h1s, ws, feats_r, feats_a=feats_a, masks_r=masks_r, masks_a=masks)
@@ -193,7 +192,6 @@ class LSTMSynthesis(nn.Module):
         ret = (end, stop, weights, mu_1, mu_2, log_sigma_1, log_sigma_2, rho, w, kappa, state1, state2, state3, phi)
         if masks is not None:
             ret += (mu_z, log_var_z, mu_prior, log_var_prior, A)
-        
         return ret
     
     def clip_grad_ensure_model_health(self, clip_value, lstm_clip_value):

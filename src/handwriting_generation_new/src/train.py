@@ -17,7 +17,8 @@ import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
 
 # import model and utilities
-from model import LSTMSynthesis
+# from model import LSTMSynthesis
+from model_transformer import TransformerSynthesis
 from utilz import get_init_state, save_checkpoint
 from generate import generate_conditionally
 logger = logging.getLogger(__name__)
@@ -86,13 +87,17 @@ def train(args, train_loader, validation_loader, local_rank=0, enable_dist=False
     last_model_ref = os.path.join(args.model_dir, "last_model.txt")
     
     # define model and optimizer
-    model = LSTMSynthesis(vocab_len, args.cell_size, args.num_clusters, args.K, args.z_size if args.style_equalization else 0).to(device)
-
+    if args.model_type == 'alexrnn':
+        model = LSTMSynthesis(vocab_len, args.cell_size, args.num_clusters, args.K, args.z_size if args.style_equalization else 0).to(device)
+        print('use alexrnn')
+    elif args.model_type == 'transformer':
+        print('use transformer')
+        model = TransformerSynthesis(vocab_len, args.cell_size, args.num_clusters, args.K, args.z_size if args.style_equalization else 0).to(device)
+    
     if args.optimizer == 'rms':
         optimizer = optim.RMSprop(model.parameters(), lr=args.learning_rate, momentum=0.9, alpha=0.9)
     elif args.optimizer == 'adam':
         optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
-    
     scheduler = None
     if args.use_scheduler:
         lr_lambda = lambda e: args.warmup_steps**0.5 * min(e**-0.5 if e != 0 else 0, e * args.warmup_steps**-1.5)
@@ -134,7 +139,6 @@ def train(args, train_loader, validation_loader, local_rank=0, enable_dist=False
             batch_size = data.shape[0]
             state1, state2, state3 = get_init_state(batch_size, args.cell_size, device=device, squeeze=True), get_init_state(batch_size, args.cell_size,device=device), get_init_state(batch_size, args.cell_size,device=device)
             kappa = torch.zeros(batch_size, args.K).to(device)
-
             x, y = data[:, :-1], data[:, 1:]
             w = onehots[:, :1].squeeze()
             
@@ -164,7 +168,6 @@ def train(args, train_loader, validation_loader, local_rank=0, enable_dist=False
             optimizer.step()
             if args.use_scheduler:
                 scheduler.step()
-            
         # validation
         model.eval() 
         validation_loss = 0
@@ -211,11 +214,11 @@ def train(args, train_loader, validation_loader, local_rank=0, enable_dist=False
                 save_checkpoint(epoch, model, validation_loss / len(validation_loader), optimizer, scheduler, args.model_dir, "bestmodel.pt")
             testTexts = [
                 "Never gonna give you up ",
-                "never gonna give you up! ",
+                "never gonna give you up ",
                 "xue hai wu ya ku zuo zou ", # OOVs
                 "1234567890 ", # number
                 "MICROSOFT IS GOOD ", # capital
-                "Hi, I'm xu! ", # X and punctuation
+                "Hi, I'm xu ", # X and punctuation
             ]
             for i, text in enumerate(testTexts):
                 datum_b, _, _ = train_loader.dataset[i*1000]
@@ -229,7 +232,8 @@ def train(args, train_loader, validation_loader, local_rank=0, enable_dist=False
                                     char_to_code_file=os.path.join(args.data_dir, 'char_to_code.pt'),
                                     state_dict_file=model_path,
                                     bias=1.0, bias2=1.0,
-                                    x_r=torch.unsqueeze(datum_b[:-1], 0).to(device) if args.style_equalization else None
+                                    x_r=torch.unsqueeze(datum_b[:-1], 0).to(device) if args.style_equalization else None ,
+                                    model_type=args.model_type
                 )
             print('wall time: {}s'.format(time.time()-start_time))
             logger.info('wall time: {}s'.format(time.time()-start_time))
@@ -237,15 +241,15 @@ def train(args, train_loader, validation_loader, local_rank=0, enable_dist=False
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', type=str, default='../datasets',
+    parser.add_argument('--data_dir', type=str, default='../small_training_data',
                         help='directory to load training data')
     parser.add_argument('--model_dir', type=str, default='../save',
                         help='directory to save model to')
     parser.add_argument('--cell_size', type=int, default=512,
                         help='size of LSTM hidden state')
-    parser.add_argument('--batch_size', type=int, default=32,
+    parser.add_argument('--batch_size', type=int, default=2,
                         help='minibatch size')
-    parser.add_argument('--num_epochs', type=int, default=100,
+    parser.add_argument('--num_epochs', type=int, default=1,
                         help='number of epochs')
     parser.add_argument('--optimizer', type=str, default='rms',
                         help='optimizer to use (rms or adam)')
@@ -271,6 +275,8 @@ def main():
                         help='checkpoint path from which to resume training')
     parser.add_argument('--style_equalization', action='store_true',
                         help='whether or not to train with style equalization')
+    parser.add_argument('--model_type', type=str, default='transformer', 
+                        help='model to use (alexrnn or transformer)')
     args = parser.parse_args()
     if not os.path.exists(args.model_dir):
         os.makedirs(args.model_dir)
@@ -307,10 +313,9 @@ def main():
     validation_data = [(validation_data[0][i], validation_data[1][i], validation_data[2][i]) for i in range(len(validation_data[0]))] 
     if enable_dist:
         validation_sampler = torch.utils.data.DistributedSampler(validation_data, shuffle = False, num_replicas= dist.get_world_size() , rank=dist.get_rank())
-        validation_loader = torch.utils.data.DataLoader(validation_data, sampler = validation_sampler, batch_size=args.batch_size,  pin_memory = True)#, shuffle=False, drop_last=True)
+        validation_loader = torch.utils.data.DataLoader(validation_data, sampler = validation_sampler, batch_size=args.batch_size,  pin_memory = True, drop_last=True)#, shuffle=False, drop_last=True)
     else:
         validation_loader = torch.utils.data.DataLoader(validation_data, batch_size=args.batch_size)#, shuffle=False, drop_last=True)
-    
     # training
     train(args, train_loader, validation_loader, local_rank, enable_dist)
 

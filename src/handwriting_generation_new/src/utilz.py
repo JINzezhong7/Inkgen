@@ -57,6 +57,11 @@ def plot_stroke(stroke, save_name=None):
     x = numpy.cumsum(stroke[:, 1])
     y = numpy.cumsum(stroke[:, 2])
 
+    # 转换成 text——line image
+    # padding = 1
+    # x_min, x_max = x.min() - padding, x.max() + padding
+    # y_min, y_max = y.min() -padding, y.max() + padding
+
     cuts = numpy.where(stroke[:, 0] == 1)[0]
     if len(stroke) not in cuts:
         cuts = np.append(cuts, len(stroke))
@@ -68,6 +73,9 @@ def plot_stroke(stroke, save_name=None):
             
         ax.plot(x[start:cut_value], y[start:cut_value],linewidth=3, color=color)
         start = cut_value + 1
+
+    # ax.set_xlim(x_min, x_max)
+    # ax.set_ylim(y_min, y_max)
     ax.axis('equal')
 
     if save_name is None:

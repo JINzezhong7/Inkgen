@@ -1,0 +1,45 @@
+# > python pipelines/TrainExportPipeline.py --config-dir pipelines/config --config-name experiments/tlg_rnn run.submit=True
+
+defaults:
+  - _self_
+  - aml: ia-mlops
+  - compute: ia-mlops8v100
+  - modules/module_defaults
+
+run:
+  experiment_name: "transformer_data_6m"
+  regenerate_outputs: false
+  continue_on_failure: false
+  verbose: false
+  submit: false
+  resume: false
+  canary: false
+  silent: false
+  wait: false
+
+module_loader:
+  use_local: "InkGen"
+  force_default_module_version: null
+  force_all_module_version: null
+  local_steps_folder: "../../../components"
+
+inputs:
+  data_dir: "Eng-6M"
+  data_dir_version: "1"
+  batch_size: 64
+  num_epochs: 1000
+  cell_size: 512
+  learning_rate: 0.0001
+  optimizer: 'adam'
+  warmup_steps: 4000
+  decay_rate: 0.99
+  num_clusters: 20
+  K: 10
+  clip_value: 100
+  lstm_clip_value: 10
+  use_scheduler: False
+  z_size: 256
+  resume_from_ckpt: "none"
+  style_equalization: False
+outputs:
+  output_dir: {}
